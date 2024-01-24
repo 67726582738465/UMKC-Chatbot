@@ -1,4 +1,4 @@
-# PDS_ChatBot
+# UMKC-ChatBot
 
 We have created a Chat Bot to answer any queries related to University of Missouri - Kansas City.
 
