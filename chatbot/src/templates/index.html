@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beta Bot Chat Window</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-image: url('./Background.jpg');
+        height: 100vh;
+        background-image: linear-gradient(#3993ed, rgb(177, 192, 230), rgb(146, 135, 48));
+      }
+
+      /*#chat-box {
+        position: fixed;
+        bottom: 20px;
+        right: -300px;
+        width: 300px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        transition: right 0.3s ease-in-out;
+        border-radius: 10px;
+      } */
+
+      #chat-box {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        transition: right 0.3s ease-in-out;
+        border-radius: 10px;
+        width: 50vw;
+        margin-top: 5rem;
+        margin-left: 22rem;
+        height: auto;
+      }
+
+      #chat-header {
+        background-color: #6DADD7;
+        color: #fff;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        position: relative; 
+      }
+
+      #chat-header img {
+        position: align-left;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        max-width: 50px;
+        height: auto;
+      }
+
+      #chat-content {
+        padding: 20px;
+        height: 200px;
+        overflow-y: auto;
+      }
+
+      #question {
+        width: 80%;
+        box-sizing: border-box;
+        padding: 10px;
+        margin: 10px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+      #selected_question {
+        width: calc(100% - 40px);
+        padding: 10px;
+        margin: 10px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+
+      #send-btn {
+        width: calc(100% - 40px);
+        padding: 10px;
+        margin: 10px;
+        background-color: #6DADD7;
+        color: #fff;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+
+      .chat-logo{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+      }
+      
+
+    </style>
+  </head>
+  <body>
+    <div class="chat-logo">
+      <img
+      id="chat-logo"
+      src="https://seeklogo.com/images/U/umkc-kangaroos-logo-BAD44FD034-seeklogo.com.png"
+      alt="umkclogo"
+      onclick="toggleChatBox()"
+    />
+    </div> 
+    <div id="chat-box">
+      <div id="chat-header" onclick="toggleChatBox()">
+        <img src="https://seeklogo.com/images/U/umkc-kangaroos-logo-BAD44FD034-seeklogo.com.png" alt="Example Image" />
+        Chat with US
+      </div>
+      <div id="chat-content">
+        {% if question %}
+        <h2 style="color: #6DADD7;">Your Question:</h2>
+        <p>{{ question }}</p>
+        {% endif %} {% if response %}
+        <h2 style="color: green;">Bot's Response:</h2>
+        <p>{{ response }}</p>
+        {% endif %}
+        <form action="/ask" method="post">
+          <input
+            type="text"
+            id="question"
+            name="question"
+            oninput="filterOptions()"
+            placeholder="Type your message..."
+            required
+          />
+          <!-- <label for="selected_question">Select a question:</label> -->
+          <select id="selected_question" name="selected_question">
+            <option value="" disabled selected>Select a question:</option>
+            {% for q in questions %}
+            <option value="{{ q }}">{{ q }}</option>
+            {% endfor %}
+          </select>
+          <button id="send-btn" type="submit" onclick="sendMessage()">
+            Send
+          </button>
+        </form>
+      </div>
+
+      <script>
+        function toggleChatBox() {
+          var chatBox = document.getElementById("chat-box");
+          var currentRight = parseInt(getComputedStyle(chatBox).right);
+          chatBox.style.display = "flex";
+          }
+
+        function sendMessage() {
+          var selectedQuestion =
+            document.getElementById("selected_question" + "question").value;
+          var chatContent = document.getElementById("chat-content");
+
+          // Display user's message in the chat
+          chatContent.innerHTML += "<p>You: " + selectedQuestion + "</p>";
+          // Send user's message to the server and get bot's response (for demonstration purposes)
+          fetch(`/ask?selectedQuestion=${encodeURIComponent(selectedQuestion)}`)
+            .then((response) => response.json())
+            .then((data) => {
+              // Display bot's response in the chat
+              chatContent.innerHTML += "<p>Bot:" + data.response + "</p>"; 
+            });
+
+          // Clear input fields
+          document.getElementById("question").value = "";
+          document.getElementById("selected_question").value = "";
+        }
+
+        function filterOptions() {
+          var inputText = document.getElementById("question").value.toLowerCase();
+          var dropdown = document.getElementById("selected_question");
+
+          // Clear existing options
+          dropdown.innerHTML = "";
+
+          // Fetch new filtered options from the server
+          fetch(`/filter_options?input_text=${inputText}`)
+            .then((response) => response.json())
+            .then((data) => {
+              // Add a default option
+              var defaultOption = document.createElement("option");
+              defaultOption.value = "";
+              defaultOption.text = "Select a question:";
+              dropdown.add(defaultOption);
+
+              // Add filtered options
+              data.forEach((suggestion) => {
+                var newOption = document.createElement("option");
+                newOption.value = suggestion;
+                newOption.text = suggestion;
+                dropdown.add(newOption);
+              });
+            });
+        }
+      </script>
+    </body>
+  </html>
